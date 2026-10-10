@@ -21,6 +21,10 @@ app.add_middleware(LoggingMiddleware)
 app.add_exception_handler(AppError, app_error_handler)
 app.add_exception_handler(Exception, catch_all_exception_handler)
 
+from app.routers import words
+
+app.include_router(words.router)
+
 @app.get("/")
 def read_root():
     return {"message": "Welcome to the Spaced Repetition Vocabulary Trainer API. Go to /docs for the API documentation."}
