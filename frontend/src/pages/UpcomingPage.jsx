@@ -3,6 +3,7 @@ import { wordsApi } from '../api';
 import { useVocab } from '../context/VocabContext';
 import { Calendar, Trash2, ChevronLeft, ChevronRight, RefreshCw, AlertCircle, Languages } from 'lucide-react';
 import { SpeakerButton } from '../components/SpeakerButton';
+import { MemoryBattery } from '../components/MemoryBattery';
 
 const PAGE_SIZE = 15;
 
@@ -223,6 +224,7 @@ export const UpcomingPage = () => {
                       <th>Repetition</th>
                       <th>Interval</th>
                       <th>Ease Factor</th>
+                      <th>Memory Health</th>
                       <th>Next Review Time</th>
                       <th style={{ textAlign: 'right' }}>Actions</th>
                     </tr>
@@ -247,6 +249,9 @@ export const UpcomingPage = () => {
                         <td>{w.repetition}</td>
                         <td>{w.interval} day{w.interval === 1 ? '' : 's'}</td>
                         <td>{w.easiness_factor.toFixed(2)}</td>
+                        <td>
+                          <MemoryBattery word={w} compact={true} />
+                        </td>
                         <td style={{ color: 'var(--text-muted)', fontSize: '0.85rem' }}>
                           {new Date(w.next_review).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
                         </td>

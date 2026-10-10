@@ -3,6 +3,7 @@ import { useVocab } from '../context/VocabContext';
 import { wordsApi } from '../api';
 import { speakWord } from '../utils/speech';
 import { SpeakerButton } from '../components/SpeakerButton';
+import { MemoryBattery } from '../components/MemoryBattery';
 import { CheckCircle2, RotateCcw, Sparkles, BookOpen, ArrowRight, ArrowLeft, HelpCircle, Trophy, BarChart2 } from 'lucide-react';
 import { Link, useNavigate } from 'react-router-dom';
 
@@ -306,7 +307,7 @@ export const ReviewPage = () => {
           </div>
 
           {/* Word term + Pronunciation Audio button */}
-          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.85rem', margin: '0.75rem 0' }}>
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.85rem', margin: '0.75rem 0 0.5rem' }}>
             <h1 className="word-term" id="card-word" style={{ margin: 0 }}>
               {currentWord.word}
             </h1>
@@ -317,6 +318,9 @@ export const ReviewPage = () => {
               buttonId="btn-speak-active-word"
             />
           </div>
+
+          {/* Ebbinghaus Forgetting Curve Memory Battery Meter */}
+          <MemoryBattery word={currentWord} />
 
           {showDefinition ? (
             <div className="definition-box" id="card-definition-box">
