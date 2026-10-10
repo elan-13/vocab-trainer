@@ -1,0 +1,574 @@
+{
+  "openapi": "3.1.0",
+  "info": {
+    "title": "Spaced Repetition Vocabulary Trainer",
+    "version": "0.1.0"
+  },
+  "paths": {
+    "/words/": {
+      "post": {
+        "tags": [
+          "words"
+        ],
+        "summary": "Create Word",
+        "operationId": "create_word",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/WordCreate"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/WordResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/words/due/": {
+      "get": {
+        "tags": [
+          "words"
+        ],
+        "summary": "Get Due Words",
+        "operationId": "get_due_words",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/WordResponse"
+                  },
+                  "type": "array",
+                  "title": "Response Get Due Words"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/words/{word_id}/review/": {
+      "post": {
+        "tags": [
+          "words"
+        ],
+        "summary": "Review Word",
+        "operationId": "review_word",
+        "parameters": [
+          {
+            "name": "word_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "title": "Word Id"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ReviewCreate"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ReviewScheduleResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/words/{word_id}": {
+      "delete": {
+        "tags": [
+          "words"
+        ],
+        "summary": "Delete Word",
+        "operationId": "delete_word",
+        "parameters": [
+          {
+            "name": "word_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "title": "Word Id"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Successful Response"
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/words/upcoming/": {
+      "get": {
+        "tags": [
+          "words"
+        ],
+        "summary": "Get Upcoming Words",
+        "operationId": "get_upcoming_words",
+        "parameters": [
+          {
+            "name": "limit",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "maximum": 100,
+              "minimum": 1,
+              "default": 50,
+              "title": "Limit"
+            }
+          },
+          {
+            "name": "offset",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "minimum": 0,
+              "default": 0,
+              "title": "Offset"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/WordResponse"
+                  },
+                  "title": "Response Get Upcoming Words"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/words/history/": {
+      "get": {
+        "tags": [
+          "words"
+        ],
+        "summary": "Get History",
+        "operationId": "get_history",
+        "parameters": [
+          {
+            "name": "limit",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "maximum": 100,
+              "minimum": 1,
+              "default": 50,
+              "title": "Limit"
+            }
+          },
+          {
+            "name": "offset",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "minimum": 0,
+              "default": 0,
+              "title": "Offset"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HistoryResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/": {
+      "get": {
+        "summary": "Read Root",
+        "operationId": "read_root__get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          }
+        }
+      }
+    },
+    "/force-error": {
+      "get": {
+        "summary": "Force Error",
+        "operationId": "force_error_force_error_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          }
+        }
+      }
+    },
+    "/force-app-error": {
+      "get": {
+        "summary": "Force App Error",
+        "operationId": "force_app_error_force_app_error_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "schemas": {
+      "HTTPValidationError": {
+        "properties": {
+          "detail": {
+            "items": {
+              "$ref": "#/components/schemas/ValidationError"
+            },
+            "type": "array",
+            "title": "Detail"
+          }
+        },
+        "type": "object",
+        "title": "HTTPValidationError"
+      },
+      "HistoryResponse": {
+        "properties": {
+          "accuracy": {
+            "type": "number",
+            "title": "Accuracy"
+          },
+          "streak": {
+            "type": "integer",
+            "title": "Streak"
+          },
+          "difficult_words": {
+            "items": {
+              "$ref": "#/components/schemas/WordResponse"
+            },
+            "type": "array",
+            "title": "Difficult Words"
+          },
+          "recent_reviews": {
+            "items": {
+              "$ref": "#/components/schemas/ReviewResponse"
+            },
+            "type": "array",
+            "title": "Recent Reviews"
+          }
+        },
+        "type": "object",
+        "required": [
+          "accuracy",
+          "streak",
+          "difficult_words",
+          "recent_reviews"
+        ],
+        "title": "HistoryResponse"
+      },
+      "ReviewCreate": {
+        "properties": {
+          "score": {
+            "type": "integer",
+            "maximum": 5.0,
+            "minimum": 0.0,
+            "title": "Score"
+          }
+        },
+        "type": "object",
+        "required": [
+          "score"
+        ],
+        "title": "ReviewCreate"
+      },
+      "ReviewResponse": {
+        "properties": {
+          "id": {
+            "type": "integer",
+            "title": "Id"
+          },
+          "word_id": {
+            "type": "integer",
+            "title": "Word Id"
+          },
+          "score": {
+            "type": "integer",
+            "title": "Score"
+          },
+          "review_date": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Review Date"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "word_id",
+          "score",
+          "review_date"
+        ],
+        "title": "ReviewResponse"
+      },
+      "ReviewScheduleResponse": {
+        "properties": {
+          "new_repetition": {
+            "type": "integer",
+            "title": "New Repetition"
+          },
+          "new_interval": {
+            "type": "integer",
+            "title": "New Interval"
+          },
+          "new_easiness_factor": {
+            "type": "number",
+            "title": "New Easiness Factor"
+          },
+          "next_review": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Next Review"
+          }
+        },
+        "type": "object",
+        "required": [
+          "new_repetition",
+          "new_interval",
+          "new_easiness_factor",
+          "next_review"
+        ],
+        "title": "ReviewScheduleResponse"
+      },
+      "ValidationError": {
+        "properties": {
+          "loc": {
+            "items": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "integer"
+                }
+              ]
+            },
+            "type": "array",
+            "title": "Location"
+          },
+          "msg": {
+            "type": "string",
+            "title": "Message"
+          },
+          "type": {
+            "type": "string",
+            "title": "Error Type"
+          },
+          "input": {
+            "title": "Input"
+          },
+          "ctx": {
+            "type": "object",
+            "title": "Context"
+          }
+        },
+        "type": "object",
+        "required": [
+          "loc",
+          "msg",
+          "type"
+        ],
+        "title": "ValidationError"
+      },
+      "WordCreate": {
+        "properties": {
+          "word": {
+            "type": "string",
+            "maxLength": 100,
+            "minLength": 1,
+            "title": "Word"
+          },
+          "language": {
+            "type": "string",
+            "maxLength": 50,
+            "minLength": 1,
+            "title": "Language"
+          },
+          "translation": {
+            "type": "string",
+            "maxLength": 100,
+            "minLength": 1,
+            "title": "Translation"
+          }
+        },
+        "type": "object",
+        "required": [
+          "word",
+          "language",
+          "translation"
+        ],
+        "title": "WordCreate"
+      },
+      "WordResponse": {
+        "properties": {
+          "word": {
+            "type": "string",
+            "maxLength": 100,
+            "minLength": 1,
+            "title": "Word"
+          },
+          "language": {
+            "type": "string",
+            "maxLength": 50,
+            "minLength": 1,
+            "title": "Language"
+          },
+          "translation": {
+            "type": "string",
+            "maxLength": 100,
+            "minLength": 1,
+            "title": "Translation"
+          },
+          "id": {
+            "type": "integer",
+            "title": "Id"
+          },
+          "repetition": {
+            "type": "integer",
+            "title": "Repetition"
+          },
+          "interval": {
+            "type": "integer",
+            "title": "Interval"
+          },
+          "easiness_factor": {
+            "type": "number",
+            "title": "Easiness Factor"
+          },
+          "next_review": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Next Review"
+          }
+        },
+        "type": "object",
+        "required": [
+          "word",
+          "language",
+          "translation",
+          "id",
+          "repetition",
+          "interval",
+          "easiness_factor",
+          "next_review"
+        ],
+        "title": "WordResponse"
+      }
+    }
+  }
+}

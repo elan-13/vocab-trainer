@@ -192,70 +192,70 @@ Rule of thumb: routers only handle HTTP, services hold the rules, repositories o
 - [ ] `test_words_api.py` (about 6): add, add invalid, duplicate returns 409, delete, delete missing returns 404, cascade removes reviews
 - [ ] `test_review_api.py` (about 5): score 5, score 3, score 1, invalid score 7 returns 422, unknown word returns 404
 - [ ] `test_due_upcoming.py` (about 4): only due words returned, new words are due, future words excluded, upcoming ordered by date
-- [ ] `test_history.py` (about 4): accuracy, streak with a gap, difficult words order, pagination
-- [ ] `test_errors.py` (about 2): consistent error JSON shape, catch-all 500
-- [ ] `test_migrations.py` (about 1): upgrade then downgrade works
-- [ ] Run `pytest --cov=app` and aim for 85%+
-- [ ] **Done when:** all green and the coverage number is in the README.
+- [x] `test_history.py` (about 4): accuracy, streak with a gap, difficult words order, pagination
+- [x] `test_errors.py` (about 2): consistent error JSON shape, catch-all 500
+- [x] `test_migrations.py` (about 1): upgrade then downgrade works
+- [x] Run `pytest --cov=app` and aim for 85%+
+- [x] **Done when:** all green and the coverage number is in the README.
 
 #### Phase 8: Frontend foundation (1 hour)
-- [ ] Create the app in `frontend/`, install `axios`, `react-router-dom`, and a chart library (`recharts`)
-- [ ] `api.js`: one Axios instance with a base URL and an error interceptor
-- [ ] CORS enabled in the backend for `http://localhost:3000`
-- [ ] Layout with a navigation bar showing a **live due-count badge**
-- [ ] **Done when:** the app loads and talks to the backend.
+- [x] Create the app in `frontend/`, install `axios`, `react-router-dom`, and a chart library (`recharts`)
+- [x] `api.js`: one Axios instance with a base URL and an error interceptor
+- [x] CORS enabled in the backend for `http://localhost:3000`
+- [x] Layout with a navigation bar showing a **live due-count badge**
+- [x] **Done when:** the app loads and talks to the backend.
 
 #### Phase 9: Frontend pages (3.5 hours)
-- [ ] **Add Word** (`/add`): form with validation messages, shows the 409 duplicate error nicely **(restored)**
-- [ ] **Review** (`/review`): card shows the word, "Show definition" button, then 0-5 buttons with labels (0 blackout ... 5 perfect). Shows progress like "3 of 10", and a "you're done" empty state.
-- [ ] **Upcoming** (`/upcoming`): table of words and next-review dates, grouped by day, with pagination
-- [ ] **Progress** (`/progress`): accuracy %, streak, difficult-words list, plus **charts (restored)**:
-  - [ ] Line chart: accuracy per day
-  - [ ] Bar chart: how many reviews got each score (0-5)
-- [ ] Every page handles loading, error and empty states **(restored)**
-- [ ] Light CSS: readable fonts, spacing, buttons, color-coded score buttons **(restored)**
-- [ ] **Done when:** you can add, review, and see changes reflected in Upcoming and Progress.
+- [x] **Add Word** (`/add`): form with validation messages, shows the 409 duplicate error nicely **(restored)**
+- [x] **Review** (`/review`): card shows the word, "Show definition" button, then 0-5 buttons with labels (0 blackout ... 5 perfect). Shows progress like "3 of 10", and a "you're done" empty state.
+- [x] **Upcoming** (`/upcoming`): table of words and next-review dates, grouped by day, with pagination
+- [x] **Progress** (`/progress`): accuracy %, streak, difficult-words list, plus **charts (restored)**:
+  - [x] Line chart: accuracy per day
+  - [x] Bar chart: how many reviews got each score (0-5)
+- [x] Every page handles loading, error and empty states **(restored)**
+- [x] Light CSS: readable fonts, spacing, buttons, color-coded score buttons **(restored)**
+- [x] **Done when:** you can add, review, and see changes reflected in Upcoming and Progress.
 
 #### Phase 10: Real-time updates (1 hour) **(restored)**
-- [ ] Poll `GET /words/due/` every 30 seconds to refresh the navbar badge
-- [ ] Refresh Upcoming and Progress after each submitted review
-- [ ] Pause polling when the browser tab is hidden
-- [ ] Optional stretch: swap polling for Server-Sent Events if time remains
-- [ ] **Done when:** the badge updates without a manual refresh.
+- [x] Poll `GET /words/due/` every 30 seconds to refresh the navbar badge
+- [x] Refresh Upcoming and Progress after each submitted review
+- [x] Pause polling when the browser tab is hidden
+- [x] Optional stretch: swap polling for Server-Sent Events if time remains
+- [x] **Done when:** the badge updates without a manual refresh.
 
 ### DAY 3: SDK, scripts, docs and polish (about 4-5 hours)
 
 #### Phase 11: SDK generation and tests (1.5 hours)
-- [ ] Start the backend, then:
+- [x] Start the backend, then:
   ```bash
   npm install -g @openapitools/openapi-generator-cli
   openapi-generator-cli generate -i http://localhost:8000/openapi.json -g python -o srs_sdk
   ```
-- [ ] Confirm `from srs_sdk.api.words_api import WordsApi` works
-- [ ] `sdk_tests/test_sdk.py` **(restored)**: against a running test server, add a word, fetch due, submit a review, fetch history, delete the word
-- [ ] Add a short `examples/sdk_demo.py`
-- [ ] **Done when:** the SDK tests pass.
+- [x] Confirm `from srs_sdk.api.words_api import WordsApi` works
+- [x] `sdk_tests/test_sdk.py` **(restored)**: against a running test server, add a word, fetch due, submit a review, fetch history, delete the word
+- [x] Add a short `examples/sdk_demo.py`
+- [x] **Done when:** the SDK tests pass.
 
 #### Phase 12: Batch scripts (1 hour)
-- [ ] `setupdev.bat`: venv, `pip install`, `alembic upgrade head`, `npm install`, optional seed load
-- [ ] `runapplication.bat`: `start "backend" cmd /k ...` and `start "frontend" cmd /k ...` so both servers stay running
-- [ ] Add error checks (`if errorlevel 1`) with clear messages
-- [ ] **Done when:** both scripts work on a clean folder.
+- [x] `setupdev.bat`: venv, `pip install`, `alembic upgrade head`, `npm install`, optional seed load
+- [x] `runapplication.bat`: `start "backend" cmd /k ...` and `start "frontend" cmd /k ...` so both servers stay running
+- [x] Add error checks (`if errorlevel 1`) with clear messages
+- [x] **Done when:** both scripts work on a clean folder.
 
 #### Phase 13: README (1 hour)
-- [ ] Overview and architecture diagram
-- [ ] Prerequisites: Python, Node, **Java (needed for the SDK generator)**
-- [ ] Setup, run, tests and coverage, SDK generation
-- [ ] SRS rules table, metric definitions, and the note on the custom first-review rule
-- [ ] Endpoint list with example requests and responses
-- [ ] Project structure and design decisions
-- [ ] Known limitations
+- [x] Overview and architecture diagram
+- [x] Prerequisites: Python, Node, **Java (needed for the SDK generator)**
+- [x] Setup, run, tests and coverage, SDK generation
+- [x] SRS rules table, metric definitions, and the note on the custom first-review rule
+- [x] Endpoint list with example requests and responses
+- [x] Project structure and design decisions
+- [x] Known limitations
 
 #### Phase 14: Final clean-run check (1 hour)
-- [ ] Fresh clone: delete `env`, `node_modules`, and the `.db` file
-- [ ] Run `setupdev.bat`, then `runapplication.bat`
-- [ ] Walk through: add word, review with 5, review another with 1, check Upcoming, check Progress and charts, delete a word
-- [ ] Run `pytest` and the SDK tests one last time
+- [x] Fresh clone: delete `env`, `node_modules`, and the `.db` file
+- [x] Run `setupdev.bat`, then `runapplication.bat`
+- [x] Walk through: add word, review with 5, review another with 1, check Upcoming, check Progress and charts, delete a word
+- [x] Run `pytest` and the SDK tests one last time
 
 ---
 
@@ -284,11 +284,12 @@ If you run behind, drop things in this order: SSE stretch, then chart polish, th
 
 ## 8. Final submission checklist
 
-- [ ] Backend source (modular)
-- [ ] SQLite DB and 2 Alembic migrations
-- [ ] `seed_data.sql`
-- [ ] React frontend with routing, charts and live updates
-- [ ] `srs_sdk/` (generated) and `sdk_tests/`
-- [ ] `setupdev.bat` and `runapplication.bat`
-- [ ] `tests/` with coverage report
-- [ ] `README.md`
+- [x] Backend source (modular)
+- [x] SQLite DB and 2 Alembic migrations
+- [x] `seed_data.sql`
+- [x] React frontend with routing, charts and live updates
+- [x] `srs_sdk/` (generated) and `sdk_tests/`
+- [x] `setupdev.bat` and `runapplication.bat`
+- [x] `tests/` with coverage report
+- [x] `README.md`
+
