@@ -64,9 +64,87 @@ graph TB
 
 ---
 
-## 2. Layered Architecture Breakdown
+## 2. End-to-End Process Flow Diagrams
 
-### 2.1 Presentation Layer (`frontend/src/`)
+### 2.1 Spaced Repetition Review Lifecycle (Sequence Flow)
+
+This diagram illustrates the complete interactive review sequence, from due card fetching, native TTS pronunciation, recall evaluation, algorithm branching, database persistence, to real-time UI state synchronization.
+
+```mermaid
+sequenceDiagram
+    autonumber
+    actor User as 👤 Learner
+    participant UI as 🖥️ React Frontend
+    participant API as ⚡ FastAPI Gateway
+    participant SRS as 🧠 SRS Domain Engine
+    participant DB as 💾 SQLite Database
+
+    Note over User, UI: Session Initialization & Polling
+    UI->>API: GET /words/due/ (Background / Initial Fetch)
+    API->>DB: SELECT * FROM words WHERE next_review <= CURRENT_TIMESTAMP
+    DB-->>API: Return list of due vocabulary cards
+    API-->>UI: 200 OK [WordResponse list]
+    UI-->>User: Renders Flashcard (Word, Language Tag, Memory Battery: 🪫 Critical)
+
+    Note over User, UI: Retrieval Practice & Audio Feedback
+    opt Native Pronunciation Audio
+        User->>UI: Presses [P] or clicks Speaker icon
+        UI-->>User: Plays native accent audio via Web Speech API
+    end
+
+    User->>UI: Presses [Space] or clicks "Show Definition"
+    UI-->>User: Reveals Translation & 0–5 Grading Scale
+
+    Note over User, DB: Recall Rating & Algorithm Processing
+    User->>UI: Rates recall quality (Keys 0 to 5)
+    UI->>API: POST /words/{id}/review/ { "score": 0..5 }
+    API->>SRS: calculate_next(repetition, interval, ef, score)
+    
+    alt Score < 3 (Failed / Blackout)
+        SRS-->>API: Reset repetition=0, interval=0 (due today), reduce EF
+    else Repetition == 0 & Score >= 4
+        SRS-->>API: repetition=1, interval=5 days, boost EF
+    else Repetition == 0 & Score == 3
+        SRS-->>API: repetition=1, interval=2 days, adjust EF
+    else Repetition > 0 & Score >= 3
+        SRS-->>API: repetition += 1, interval = round(prev_interval * EF * 1.2)
+    end
+
+    API->>DB: INSERT INTO reviews (word_id, score, review_date)
+    API->>DB: UPDATE words SET rep, int, ef, next_review = now + interval
+    DB-->>API: Transaction Committed
+    API-->>UI: 200 OK { new_interval, new_repetition, new_ef, next_review }
+
+    Note over UI, User: Real-Time UI Recharging & Queue Shift
+    UI-->>User: Recharges Memory Battery to 🔋 Peak (100%)
+    UI->>UI: Updates live due-badge counter in Navbar (-1)
+    UI->>UI: Card transitions out of due queue into Upcoming schedule
+    opt Queue Depleted
+        UI-->>User: Displays Session Complete celebration with accuracy recap
+    end
+```
+
+### 2.2 Word Addition & Duplicate Conflict Flow
+
+```mermaid
+flowchart TD
+    A([User Submits Word / 1-Click Starter Deck]) --> B{Pydantic Validation<br/>Non-empty, length limits?}
+    B -- Failed --> C[Return 422 Unprocessable Entity]
+    B -- Passed --> D{Database Check<br/>lower word AND language exists?}
+    D -- Duplicate Found --> E[Raise DuplicateWord Error]
+    E --> F[Return 409 Conflict<br/>code: DUPLICATE_WORD]
+    F --> G[UI Displays Non-blocking Conflict Alert]
+    D -- Unique --> H[Insert into words table:<br/>repetition = 0<br/>interval = 0<br/>easiness_factor = 2.5<br/>next_review = CURRENT_TIMESTAMP]
+    H --> I[Return 201 Created]
+    I --> J[Event Propagated: notifyChange]
+    J --> K[Card Enters Due Review Queue Immediately]
+```
+
+---
+
+## 3. Layered Architecture Breakdown
+
+### 3.1 Presentation Layer (`frontend/src/`)
 - **Technology Stack**: React 19, Vite, Vanilla CSS Design System, Recharts, Lucide Icons.
 - **State & Lifecycle Management** (`VocabContext.jsx`):
   - Emits real-time updates across components.
@@ -78,7 +156,7 @@ graph TB
 - **Visual Memory Battery** (`retentionMeter.js`):
   - Visualizes real-time Ebbinghaus memory decay: Peak (85–100%), Solid (65–84%), Fading (35–64%), Critical (<35%).
 
-### 2.2 Transport & API Gateway Layer (`app/api.py`, `app/routers/`)
+### 3.2 Transport & API Gateway Layer (`app/api.py`, `app/routers/`)
 - **Dependency Injection**: Every route injects database sessions via `Depends(get_db)`.
 - **Global Error Normalization**:
   All client errors return an immutable, consistent JSON shape:
@@ -90,11 +168,11 @@ graph TB
   ```
 - **Logging Middleware**: Logs incoming HTTP method, URL path, response status, and processing duration in milliseconds.
 
-### 2.3 Domain Service Layer (`app/services/`)
+### 3.3 Domain Service Layer (`app/services/`)
 - **Pure Functions**: `srs.py` and `stats_service.py` contain zero side-effects and zero database imports, enabling instantaneous deterministic unit testing.
 - **SM-2 SRS Algorithm**: Calculates next repetition, interval in days, and updated easiness factor based on recall feedback (scores 0–5).
 
-### 2.4 Data Access & Persistence Layer (`app/repositories/`, `app/db/`)
+### 3.4 Data Access & Persistence Layer (`app/repositories/`, `app/db/`)
 - **Repository Pattern**: `WordRepository` and `ReviewRepository` encapsulate raw SQLAlchemy queries away from route handlers.
 - **SQLite Engine Configuration**:
   - Enforces `PRAGMA foreign_keys=ON` via SQLAlchemy event listener on connect.
@@ -103,7 +181,7 @@ graph TB
 
 ---
 
-## 3. Database Schema & ER Diagram
+## 4. Database Schema & ER Diagram
 
 ```mermaid
 erDiagram
@@ -132,14 +210,14 @@ erDiagram
 
 ---
 
-## 4. Spaced Repetition (SRS) Algorithm & Mathematics
+## 5. Spaced Repetition (SRS) Algorithm & Mathematics
 
-### 4.1 Easiness Factor (EF) Formula
+### 5.1 Easiness Factor (EF) Formula
 The Easiness Factor represents card difficulty (baseline `2.5`, floor `1.3`):
 $$\Delta EF = 0.1 - (5 - \text{score}) \times (0.08 + (5 - \text{score}) \times 0.02)$$
 $$EF_{\text{new}} = \max(1.3, EF_{\text{old}} + \Delta EF)$$
 
-### 4.2 Interval Scheduling Rules
+### 5.2 Interval Scheduling Rules
 
 | Condition | Action / Formula |
 |---|---|
@@ -147,7 +225,7 @@ $$EF_{\text{new}} = \max(1.3, EF_{\text{old}} + \Delta EF)$$
 | **First Review (Repetition == 0)** | • If $\text{score} \ge 4$: interval = **5 days**<br>• If $\text{score} = 3$: interval = **2 days**<br>• `repetition = 1`. |
 | **Later Reviews (Repetition > 0)** | • $\text{interval} = \text{round}(\text{previous\_interval} \times EF_{\text{new}} \times 1.2)$<br>• Increment `repetition` by 1. |
 
-### 4.3 Ebbinghaus Memory Retention Decay Model
+### 5.3 Ebbinghaus Memory Retention Decay Model
 $$R(t) = e^{-t / S}$$
 - **Peak Health (🔋 85%–100%)**: Newly reinforced; high neural stability.
 - **Solid Health (🔋 65%–84%)**: Retained firmly within optimal interval.
@@ -156,7 +234,7 @@ $$R(t) = e^{-t / S}$$
 
 ---
 
-## 5. API Reference & Specification
+## 6. API Reference & Specification
 
 All endpoints are tagged under `words` with explicit `operation_id` for client generation.
 
@@ -171,7 +249,7 @@ All endpoints are tagged under `words` with explicit `operation_id` for client g
 
 ---
 
-## 6. Project Directory Map
+## 7. Project Directory Map
 
 ```text
 vocab-trainer/
@@ -222,7 +300,7 @@ vocab-trainer/
 
 ---
 
-## 7. Testing & Verification
+## 8. Testing & Verification
 
 The suite encompasses unit tests, repository tests, API integration tests, and live-server SDK verification.
 
@@ -260,7 +338,7 @@ TOTAL                               313      2    99%
 
 ---
 
-## 8. Automated Setup & Execution
+## 9. Automated Setup & Execution
 
 ### One-Click Startup (Windows)
 ```cmd
