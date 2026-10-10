@@ -22,6 +22,7 @@ import {
   Loader2,
   Languages
 } from 'lucide-react';
+import { SpeakerButton } from '../components/SpeakerButton';
 
 const LANGUAGE_FLAGS = {
   Spanish: '🇪🇸',
@@ -538,6 +539,7 @@ export const DashboardPage = () => {
                 <span className="word-lang-pill" style={{ fontSize: '0.7rem', padding: '0.15rem 0.5rem' }}>
                   {word.language}
                 </span>
+                <SpeakerButton word={word.word} language={word.language} size={14} />
               </div>
             ))}
             {dueWords.length > 8 && (

@@ -1,7 +1,9 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { useVocab } from '../context/VocabContext';
 import { wordsApi } from '../api';
-import { CheckCircle2, RotateCcw, Sparkles, BookOpen, ArrowRight, ArrowLeft, HelpCircle, Languages } from 'lucide-react';
+import { speakWord } from '../utils/speech';
+import { SpeakerButton } from '../components/SpeakerButton';
+import { CheckCircle2, RotateCcw, Sparkles, BookOpen, ArrowRight, ArrowLeft, HelpCircle, Trophy, BarChart2 } from 'lucide-react';
 import { Link, useNavigate } from 'react-router-dom';
 
 const SCORE_LABELS = [
@@ -21,6 +23,8 @@ export const ReviewPage = () => {
   const [showDefinition, setShowDefinition] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [lastFeedback, setLastFeedback] = useState(null);
+  const [sessionCompletedCount, setSessionCompletedCount] = useState(0);
+  const [sessionScores, setSessionScores] = useState([]);
 
   // Available languages across due words
   const availableLanguages = useMemo(() => {
@@ -57,6 +61,9 @@ export const ReviewPage = () => {
         nextInterval: result.new_interval,
       });
 
+      setSessionCompletedCount((prev) => prev + 1);
+      setSessionScores((prev) => [...prev, score]);
+
       // Refresh due words list and global state
       await refreshDueWords();
       notifyChange();
@@ -69,10 +76,9 @@ export const ReviewPage = () => {
     }
   };
 
-  // Keyboard shortcuts: Space reveals definition, 0-5 submits score
+  // Keyboard shortcuts: Space reveals, 0-5 scores, P pronounces, Esc exits
   useEffect(() => {
     const handleKeyDown = (e) => {
-      // Don't intercept if user is focused on an input
       if (['INPUT', 'TEXTAREA'].includes(document.activeElement?.tagName)) return;
 
       if (e.code === 'Space') {
@@ -81,12 +87,18 @@ export const ReviewPage = () => {
       } else if (showDefinition && !submitting && ['0', '1', '2', '3', '4', '5'].includes(e.key)) {
         e.preventDefault();
         handleScore(parseInt(e.key, 10));
+      } else if ((e.key === 'p' || e.key === 'P') && currentWord) {
+        e.preventDefault();
+        speakWord(currentWord.word, currentWord.language);
+      } else if (e.key === 'Escape') {
+        e.preventDefault();
+        navigate('/');
       }
     };
 
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [showDefinition, submitting, currentWord]);
+  }, [showDefinition, submitting, currentWord, navigate]);
 
   if (loading && dueWords.length === 0) {
     return (
@@ -113,31 +125,74 @@ export const ReviewPage = () => {
     );
   }
 
+  // End of session / caught up state
   if (activeQueue.length === 0) {
+    const sessionAccuracy =
+      sessionScores.length > 0
+        ? Math.round((sessionScores.filter((s) => s >= 3).length / sessionScores.length) * 100)
+        : null;
+
     return (
-      <div className="empty-state animate-fade-in" id="review-complete-state">
-        <div className="empty-icon" style={{ background: 'var(--success-glow)', color: 'var(--success)' }}>
-          <CheckCircle2 size={40} />
+      <div className="empty-state animate-fade-in" id="review-complete-state" style={{ maxWidth: 600, margin: '0 auto' }}>
+        <div className="empty-icon" style={{ background: 'var(--success-glow)', color: 'var(--success)', width: 72, height: 72 }}>
+          <Trophy size={42} />
         </div>
-        <h2 style={{ fontSize: '2.25rem' }}>
-          {selectedLanguage === 'ALL'
-            ? "You're all caught up!"
-            : `All ${selectedLanguage} reviews complete!`}
+        <h2 style={{ fontSize: '2.4rem', marginBottom: '0.25rem' }}>
+          {sessionCompletedCount > 0 ? 'Session Complete!' : "You're All Caught Up!"}
         </h2>
-        <p style={{ color: 'var(--text-muted)', maxWidth: 450, margin: '0.5rem auto 1.5rem' }}>
-          {selectedLanguage !== 'ALL' && dueWords.length > 0
-            ? `You have completed all cards for ${selectedLanguage}. You still have ${dueWords.length} cards in other decks.`
-            : 'No cards are currently due for review. Great work maintaining your spaced repetition schedule!'}
+        <p style={{ color: 'var(--text-muted)', maxWidth: 450, margin: '0.5rem auto 1.5rem', lineHeight: 1.5 }}>
+          {sessionCompletedCount > 0
+            ? `Fantastic effort! You just strengthened retention for ${sessionCompletedCount} vocabulary card${sessionCompletedCount === 1 ? '' : 's'}.`
+            : 'No cards are currently due for review. Great work staying on top of your spaced repetition schedule!'}
         </p>
 
-        {lastFeedback && (
-          <div className="alert alert-success" style={{ maxWidth: 450, margin: '0 auto 1.5rem' }}>
-            Reviewed <strong>"{lastFeedback.word}"</strong> (Score {lastFeedback.score}). Next review in {lastFeedback.nextInterval} day{lastFeedback.nextInterval === 1 ? '' : 's'}.
+        {/* Session Recap Box */}
+        {sessionCompletedCount > 0 && sessionAccuracy !== null && (
+          <div
+            className="glass-card"
+            style={{
+              padding: '1.25rem 2rem',
+              marginBottom: '1.75rem',
+              width: '100%',
+              display: 'flex',
+              justifyContent: 'space-around',
+              alignItems: 'center',
+            }}
+          >
+            <div>
+              <div style={{ fontSize: '0.8rem', color: 'var(--text-dim)', textTransform: 'uppercase', fontWeight: 700 }}>
+                Cards Reviewed
+              </div>
+              <div style={{ fontSize: '2rem', fontWeight: 800, color: '#fff' }}>
+                {sessionCompletedCount}
+              </div>
+            </div>
+            <div style={{ height: 40, width: 1, background: 'var(--border-subtle)' }} />
+            <div>
+              <div style={{ fontSize: '0.8rem', color: 'var(--text-dim)', textTransform: 'uppercase', fontWeight: 700 }}>
+                Session Accuracy
+              </div>
+              <div
+                style={{
+                  fontSize: '2rem',
+                  fontWeight: 800,
+                  color: sessionAccuracy >= 70 ? 'var(--success)' : 'var(--warning)',
+                }}
+              >
+                {sessionAccuracy}%
+              </div>
+            </div>
           </div>
         )}
 
-        <div style={{ display: 'flex', gap: '1rem', justifyContent: 'center', flexWrap: 'wrap' }}>
-          {selectedLanguage !== 'ALL' && (
+        {lastFeedback && (
+          <div className="alert alert-success" style={{ maxWidth: 450, margin: '0 auto 1.5rem', width: '100%' }}>
+            Last Card: <strong>"{lastFeedback.word}"</strong> (Score {lastFeedback.score}) &rarr; Next review in {lastFeedback.nextInterval} day{lastFeedback.nextInterval === 1 ? '' : 's'}.
+          </div>
+        )}
+
+        <div style={{ display: 'flex', gap: '0.85rem', justifyContent: 'center', flexWrap: 'wrap' }}>
+          {selectedLanguage !== 'ALL' && dueWords.length > 0 && (
             <button
               type="button"
               className="btn btn-primary"
@@ -147,10 +202,13 @@ export const ReviewPage = () => {
             </button>
           )}
           <Link to="/" className="btn btn-secondary" id="btn-return-dashboard">
-            <ArrowLeft size={18} /> Back to Dashboard
+            <ArrowLeft size={16} /> Back to Dashboard
           </Link>
-          <Link to="/add" className="btn btn-secondary" id="btn-empty-add">
-            <Sparkles size={18} /> Add Words
+          <Link to="/progress" className="btn btn-secondary" id="btn-view-analytics">
+            <BarChart2 size={16} /> View Retention Analytics
+          </Link>
+          <Link to="/add" className="btn btn-primary" id="btn-empty-add">
+            <Sparkles size={16} /> Add More Words
           </Link>
         </div>
       </div>
@@ -177,7 +235,7 @@ export const ReviewPage = () => {
           className="btn btn-secondary"
           style={{ padding: '0.45rem 0.9rem', fontSize: '0.85rem' }}
           id="btn-pause-session"
-          title="Pause session and return to Dashboard"
+          title="Pause session and return to Dashboard (Esc)"
         >
           <ArrowLeft size={16} /> Dashboard
         </Link>
@@ -247,9 +305,18 @@ export const ReviewPage = () => {
             </div>
           </div>
 
-          <h1 className="word-term" id="card-word">
-            {currentWord.word}
-          </h1>
+          {/* Word term + Pronunciation Audio button */}
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.85rem', margin: '0.75rem 0' }}>
+            <h1 className="word-term" id="card-word" style={{ margin: 0 }}>
+              {currentWord.word}
+            </h1>
+            <SpeakerButton
+              word={currentWord.word}
+              language={currentWord.language}
+              size={22}
+              buttonId="btn-speak-active-word"
+            />
+          </div>
 
           {showDefinition ? (
             <div className="definition-box" id="card-definition-box">
@@ -290,7 +357,7 @@ export const ReviewPage = () => {
                   fontWeight: 600,
                 }}
               >
-                <span>Rate your recall honestly (Keys 0 - 5):</span>
+                <span>Rate recall honestly (Keys 0 - 5):</span>
                 <span style={{ fontSize: '0.75rem', color: 'var(--text-dim)' }}>
                   0-2 = Relearn • 3-5 = Advance
                 </span>
@@ -326,10 +393,26 @@ export const ReviewPage = () => {
               }}
             >
               <HelpCircle size={14} />
-              <span>Recall the translation in your head before revealing</span>
+              <span>Recall translation first, or press <kbd style={{ padding: '0.1rem 0.4rem', background: 'rgba(255,255,255,0.1)', borderRadius: 4 }}>P</kbd> to listen</span>
             </div>
           )}
         </div>
+      </div>
+
+      {/* Professional Keyboard Legend */}
+      <div className="shortcuts-legend">
+        <span className="shortcut-item">
+          <kbd className="kbd-badge">Space</kbd> Flip Card
+        </span>
+        <span className="shortcut-item">
+          <kbd className="kbd-badge">P</kbd> Pronounce
+        </span>
+        <span className="shortcut-item">
+          <kbd className="kbd-badge">0–5</kbd> Grade Recall
+        </span>
+        <span className="shortcut-item">
+          <kbd className="kbd-badge">Esc</kbd> Exit Session
+        </span>
       </div>
     </div>
   );

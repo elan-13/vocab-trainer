@@ -2,6 +2,7 @@ import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import { wordsApi } from '../api';
 import { useVocab } from '../context/VocabContext';
 import { Calendar, Trash2, ChevronLeft, ChevronRight, RefreshCw, AlertCircle, Languages } from 'lucide-react';
+import { SpeakerButton } from '../components/SpeakerButton';
 
 const PAGE_SIZE = 15;
 
@@ -229,7 +230,12 @@ export const UpcomingPage = () => {
                   <tbody>
                     {dayWords.map((w) => (
                       <tr key={w.id} id={`upcoming-row-${w.id}`}>
-                        <td style={{ fontWeight: 700, color: '#fff' }}>{w.word}</td>
+                        <td style={{ fontWeight: 700, color: '#fff' }}>
+                          <div style={{ display: 'flex', alignItems: 'center', gap: '0.45rem' }}>
+                            <span>{w.word}</span>
+                            <SpeakerButton word={w.word} language={w.language} size={14} />
+                          </div>
+                        </td>
                         <td>
                           <span className="word-lang-pill" style={{ fontSize: '0.7rem', padding: '0.15rem 0.5rem' }}>
                             {w.language}

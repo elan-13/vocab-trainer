@@ -13,6 +13,7 @@ import {
   Cell,
 } from 'recharts';
 import { Award, Flame, AlertTriangle, TrendingUp, BarChart3, Clock, CheckCircle } from 'lucide-react';
+import { SpeakerButton } from '../components/SpeakerButton';
 
 const SCORE_COLORS = ['#7f1d1d', '#dc2626', '#ea580c', '#2563eb', '#7c3aed', '#059669'];
 
@@ -256,7 +257,12 @@ export const ProgressPage = () => {
               <tbody>
                 {difficult_words.map((w) => (
                   <tr key={w.id}>
-                    <td style={{ fontWeight: 700, color: '#fff' }}>{w.word}</td>
+                    <td style={{ fontWeight: 700, color: '#fff' }}>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '0.45rem' }}>
+                        <span>{w.word}</span>
+                        <SpeakerButton word={w.word} language={w.language} size={14} />
+                      </div>
+                    </td>
                     <td>
                       <span className="word-lang-pill" style={{ fontSize: '0.7rem' }}>
                         {w.language}
