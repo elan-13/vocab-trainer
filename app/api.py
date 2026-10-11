@@ -1,8 +1,9 @@
-from fastapi import FastAPI
+from fastapi import FastAPI, Depends
 from fastapi.middleware.cors import CORSMiddleware
 from app.core.config import settings
 from app.core.logging import setup_logging, LoggingMiddleware
 from app.core.errors import AppError, app_error_handler, catch_all_exception_handler
+from app.deps import verify_api_key
 
 setup_logging()
 
@@ -11,6 +12,7 @@ app = FastAPI(title=settings.PROJECT_NAME)
 app.add_middleware(
     CORSMiddleware,
     allow_origins=settings.BACKEND_CORS_ORIGINS,
+    allow_origin_regex=r"^https?://(localhost|127\.0\.0\.1)(:\d+)?$",
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -23,7 +25,8 @@ app.add_exception_handler(Exception, catch_all_exception_handler)
 
 from app.routers import words
 
-app.include_router(words.router)
+app.include_router(words.router, dependencies=[Depends(verify_api_key)])
+
 
 @app.get("/")
 def read_root():

@@ -26,12 +26,14 @@ def db():
         db_session.close()
         Base.metadata.drop_all(bind=engine)
 
+from app.core.config import settings
+
 @pytest.fixture(scope="function")
 def client(db):
     def override_get_db():
         yield db
 
     app.dependency_overrides[get_db] = override_get_db
-    with TestClient(app, raise_server_exceptions=False) as c:
+    with TestClient(app, raise_server_exceptions=False, headers={"X-API-Key": settings.API_KEY}) as c:
         yield c
     app.dependency_overrides.clear()

@@ -1,21 +1,32 @@
-"""
-SRS Vocabulary Trainer - Python SDK Demo
-Demonstrates using the auto-generated srs_sdk to interact with the backend API.
-"""
+import os
+import sys
+from pathlib import Path
 
+# Ensure srs_sdk package is discoverable regardless of execution environment
+SDK_DIR = Path(__file__).resolve().parent.parent / "srs_sdk"
+if str(SDK_DIR) not in sys.path:
+    sys.path.insert(0, str(SDK_DIR))
+
+# pyrefly: ignore [missing-import]
 from srs_sdk.api.words_api import WordsApi
+# pyrefly: ignore [missing-import]
 from srs_sdk.configuration import Configuration
+# pyrefly: ignore [missing-import]
 from srs_sdk.api_client import ApiClient
+# pyrefly: ignore [missing-import]
 from srs_sdk.models.word_create import WordCreate
+# pyrefly: ignore [missing-import]
 from srs_sdk.models.review_create import ReviewCreate
 
 def main():
-    # 1. Initialize API Client (defaulting to local backend at port 8000)
+    # 1. Initialize API Client with API Key authentication
+    api_key = os.getenv("API_KEY", "srs-dev-secret-key-2026")
     config = Configuration(host="http://localhost:8000")
     
-    with ApiClient(config) as client:
+    with ApiClient(config, header_name="X-API-Key", header_value=api_key) as client:
         words_api = WordsApi(client)
-        print("Connected to SRS Vocab Trainer API.\n")
+        print("Connected to SRS Vocab Trainer API (Authenticated with API Key).\n")
+
 
         # 2. Add a new vocabulary card
         print("Adding a new word: 'Sonnenuntergang' (German)...")

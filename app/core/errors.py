@@ -18,6 +18,11 @@ class DuplicateWord(AppError):
     def __init__(self, detail: str = "Word already exists in this language"):
         super().__init__(detail, "DUPLICATE_WORD", status.HTTP_409_CONFLICT)
 
+class AuthenticationFailed(AppError):
+    def __init__(self, detail: str = "Forbidden: Invalid or missing API Key"):
+        super().__init__(detail, "INVALID_API_KEY", status.HTTP_403_FORBIDDEN)
+
+
 def app_error_handler(request: Request, exc: AppError):
     logger.error(f"AppError: {exc.detail} (Code: {exc.code})")
     return JSONResponse(

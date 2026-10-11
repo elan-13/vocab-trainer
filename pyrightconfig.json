@@ -1,0 +1,15 @@
+{
+  "include": [
+    "app",
+    "examples",
+    "tests",
+    "sdk_tests",
+    "srs_sdk"
+  ],
+  "extraPaths": [
+    ".",
+    "srs_sdk"
+  ],
+  "venvPath": ".",
+  "venv": "env"
+}

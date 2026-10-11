@@ -2,9 +2,42 @@
 
 An enterprise-grade, full-stack Spaced Repetition System (SRS) designed for high-efficiency human vocabulary retention. Built with **FastAPI**, **SQLite**, **Alembic**, **React (Vite)**, and an automated **Python SDK** generator pipeline.
 
+> 🚀 **Quick Start for Evaluators & HR:** Run `.\runapplication.ps1` (PowerShell) or `runapplication.bat` (CMD) to start the entire system with one click.  
+> 📖 **Deep Dive Flow & Lifecycle Guide:** See [PROJECT_FLOW.md](file:///d:/Elan/Aumne%20ai/vocab-trainer/PROJECT_FLOW.md) for the complete visual user journey, SM-2 algorithm math, data lifecycle, and architecture sequence diagrams.
+
 ---
 
-## 1. System Architecture Overview
+## 1. Quick Start & Automated Setup
+
+### One-Click Startup (Windows)
+
+**Option 1: Windows PowerShell (Recommended)**
+```powershell
+.\runapplication.ps1
+```
+
+**Option 2: Windows Command Prompt**
+```cmd
+runapplication.bat
+```
+
+All services start concurrently in dedicated terminal windows:
+- **Frontend Web Application**: [http://localhost:3000](http://localhost:3000)
+- **FastAPI REST API**: [http://localhost:8000](http://localhost:8000)
+- **Interactive Swagger Documentation**: [http://localhost:8000/docs](http://localhost:8000/docs)
+
+### Verification & Testing Commands
+```powershell
+# Run the complete test suite (26 tests including security):
+.\env\Scripts\python.exe -m pytest tests/ sdk_tests/
+
+# Run the standalone Python SDK client demo:
+.\env\Scripts\python.exe examples\sdk_demo.py
+```
+
+---
+
+## 2. System Architecture Overview
 
 The system uses a strictly decoupled, 5-tier layered architecture ensuring separation of concerns between presentation, transport, business rules, persistence, and automated code generation.
 
@@ -23,6 +56,7 @@ graph TB
 
     subgraph TransportLayer["⚡ Transport & Middleware (FastAPI · Port 8000)"]
         CORSMiddleware["CORS Middleware (Ports 3000 & 5173)"]
+        SecurityMiddleware["API Key Auth & Security (X-API-Key)"]
         LoggingMiddleware["Request Timing & Logging Middleware"]
         ErrorHandlers["Standardized Error Handler (AppError -> 4xx/5xx)"]
         APIRouter["Words Router (/words/*)"]
@@ -64,7 +98,7 @@ graph TB
 
 ---
 
-## 2. End-to-End Process Flow Diagrams
+## 3. End-to-End Process Flow Diagrams
 
 ### 2.1 Spaced Repetition Review Lifecycle (Sequence Flow)
 
@@ -142,7 +176,7 @@ flowchart TD
 
 ---
 
-## 3. Layered Architecture Breakdown
+## 4. Layered Architecture Breakdown
 
 ### 3.1 Presentation Layer (`frontend/src/`)
 - **Technology Stack**: React 19, Vite, Vanilla CSS Design System, Recharts, Lucide Icons.
@@ -181,7 +215,7 @@ flowchart TD
 
 ---
 
-## 4. Database Schema & ER Diagram
+## 5. Database Schema & ER Diagram
 
 ```mermaid
 erDiagram
@@ -210,7 +244,7 @@ erDiagram
 
 ---
 
-## 5. Spaced Repetition (SRS) Algorithm & Mathematics
+## 6. Spaced Repetition (SRS) Algorithm & Mathematics
 
 ### 5.1 Easiness Factor (EF) Formula
 The Easiness Factor represents card difficulty (baseline `2.5`, floor `1.3`):
@@ -234,29 +268,69 @@ $$R(t) = e^{-t / S}$$
 
 ---
 
-## 6. API Reference & Specification
+## 7. API Reference & Specification
 
 All endpoints are tagged under `words` with explicit `operation_id` for client generation.
 
-| Method | Endpoint | Summary | Status Codes |
-|---|---|---|---|
-| `POST` | `/words/` | Add vocabulary word | `201 Created`, `409 Conflict`, `422 Unprocessable` |
-| `GET` | `/words/due/` | Fetch flashcards currently due | `200 OK` |
-| `POST` | `/words/{id}/review/` | Submit recall score (0–5) | `200 OK`, `404 Not Found`, `422 Unprocessable` |
-| `GET` | `/words/upcoming/` | Paginated future schedule | `200 OK` |
-| `GET` | `/words/history/` | Accuracy, streak, difficult words | `200 OK` |
-| `DELETE` | `/words/{id}` | Delete card & cascade reviews | `204 No Content`, `404 Not Found` |
+| Method | Endpoint | Summary | Status Codes | Auth Required |
+|---|---|---|---|---|
+| `POST` | `/words/` | Add vocabulary word | `201 Created`, `409 Conflict`, `422 Unprocessable` | Yes (`X-API-Key`) |
+| `GET` | `/words/due/` | Fetch flashcards currently due | `200 OK` | Yes (`X-API-Key`) |
+| `POST` | `/words/{id}/review/` | Submit recall score (0–5) | `200 OK`, `404 Not Found`, `422 Unprocessable` | Yes (`X-API-Key`) |
+| `GET` | `/words/upcoming/` | Paginated future schedule | `200 OK` | Yes (`X-API-Key`) |
+| `GET` | `/words/history/` | Accuracy, streak, difficult words | `200 OK` | Yes (`X-API-Key`) |
+| `DELETE` | `/words/{id}` | Delete card & cascade reviews | `204 No Content`, `404 Not Found` | Yes (`X-API-Key`) |
+| `GET` | `/` | System Health & Info | `200 OK` | No (Public) |
 
 ---
 
-## 7. Project Directory Map
+## 7. API Key Security & Production Authentication
+
+To deliver a production-grade backend, all core spaced repetition routes require authentication via custom request headers.
+
+### Security Highlights
+- **Header:** `X-API-Key: <your-key>`
+- **Validation Engine:** FastAPI `Security(APIKeyHeader(...))` dependency injection pattern.
+- **Fail-Safe Response:** Unauthenticated or forged requests fail immediately with `403 Forbidden` and a standardized JSON payload:
+  ```json
+  {
+    "detail": "Forbidden: Invalid or missing API Key",
+    "code": "INVALID_API_KEY"
+  }
+  ```
+- **Configuration (12-Factor App):** Configurable through `.env` and environment variables with sensible defaults for zero-friction local testing.
+  ```env
+  # Backend environment variable (.env)
+  API_KEY=srs-dev-secret-key-2026
+
+  # Frontend environment variable (frontend/.env)
+  VITE_API_KEY=srs-dev-secret-key-2026
+  ```
+- **Python SDK Authentication:**
+  ```python
+  from srs_sdk.configuration import Configuration
+  from srs_sdk.api_client import ApiClient
+  from srs_sdk.api.words_api import WordsApi
+
+  config = Configuration(host="http://localhost:8000")
+  with ApiClient(config, header_name="X-API-Key", header_value="srs-dev-secret-key-2026") as client:
+      words_api = WordsApi(client)
+      due_cards = words_api.get_due_words()
+  ```
+
+---
+
+## 8. Project Directory Map
 
 ```text
 vocab-trainer/
+├── .env.example               # Root backend environment template
+├── pyrightconfig.json         # PyLance / IDE interpreter & module search configuration
+├── PROJECT_FLOW.md            # Complete user journey, SM-2 math, and data flow architecture guide
 ├── app/
 │   ├── core/                  # Settings, config, logging, and error classes
-│   │   ├── config.py          # CORS origins and database URL
-│   │   ├── errors.py          # AppError, WordNotFound, DuplicateWord
+│   │   ├── config.py          # API_KEY, CORS origins, and database URL
+│   │   ├── errors.py          # AppError, WordNotFound, DuplicateWord, AuthenticationFailed
 │   │   └── logging.py         # Request logging middleware
 │   ├── db/                    # Database models and session engine
 │   │   ├── database.py        # SQLAlchemy engine and PRAGMA event listener
@@ -274,35 +348,38 @@ vocab-trainer/
 │   │   ├── srs.py             # Pure SM-2 algorithm function
 │   │   ├── stats_service.py   # Pure accuracy, streak, and difficulty calculations
 │   │   └── word_service.py    # Service orchestrator
-│   ├── api.py                 # FastAPI application factory
-│   └── deps.py                # Database dependency injection
+│   ├── api.py                 # FastAPI application factory & router security
+│   └── deps.py                # Database and verify_api_key dependency injection
 ├── alembic/                   # Database migration lineage
 ├── frontend/                  # React Vite client
+│   ├── .env.example           # Frontend environment template
 │   ├── src/
 │   │   ├── components/        # Navbar, MemoryBattery, SpeakerButton
 │   │   ├── context/           # VocabContext (real-time polling & visibility listener)
 │   │   ├── data/              # Curated 1-click starter decks (8 languages)
 │   │   ├── pages/             # DashboardPage, ReviewPage, AddWordPage, UpcomingPage, ProgressPage
 │   │   ├── utils/             # speech.js (TTS engine), retentionMeter.js (Ebbinghaus curve)
-│   │   ├── api.js             # Axios client with interceptors
+│   │   ├── api.js             # Axios client with X-API-Key & interceptors
 │   │   ├── App.jsx            # React router definitions
 │   │   └── index.css          # Design system & dark glassmorphic styling
 │   └── vite.config.js         # Port 3000 Vite configuration
 ├── srs_sdk/                   # Auto-generated Python SDK package
-├── sdk_tests/                 # Live server integration tests for SDK
-├── examples/                  # Standalone SDK demonstration scripts
-├── tests/                     # Backend test suite (pytest)
+├── sdk_tests/                 # Live server integration tests for SDK (auth & e2e)
+├── examples/                  # Standalone SDK demonstration scripts (authenticated)
+├── tests/                     # Backend test suite (pytest: auth, srs, migrations, errors)
 ├── setupdev.bat               # Automated development setup script
-├── runapplication.bat         # Concurrent multi-server launcher script
+├── runapplication.bat         # Concurrent multi-server launcher script (Command Prompt)
+├── runapplication.ps1         # Concurrent multi-server launcher script (PowerShell)
 ├── openapi.json               # Exported OpenAPI 3.1 specification
-└── README.md                  # This architecture reference
+└── README.md                  # Executive overview and technical reference
 ```
 
 ---
 
-## 8. Testing & Verification
+## 9. Testing & Verification
 
 The suite encompasses unit tests, repository tests, API integration tests, and live-server SDK verification.
+
 
 ```powershell
 # Run full test suite with coverage report
@@ -336,14 +413,4 @@ TOTAL                               313      2    99%
 ======================== 40 passed in 1.09s ========================
 ```
 
----
 
-## 9. Automated Setup & Execution
-
-### One-Click Startup (Windows)
-```cmd
-runapplication.bat
-```
-- **Frontend Web Application**: [http://localhost:3000](http://localhost:3000)
-- **FastAPI REST API**: [http://localhost:8000](http://localhost:8000)
-- **Interactive Swagger Documentation**: [http://localhost:8000/docs](http://localhost:8000/docs)

@@ -40,10 +40,20 @@ def live_server():
     server.should_exit = True
     thread.join(timeout=2.0)
 
+from app.core.config import settings
+from srs_sdk.exceptions import ForbiddenException
+
 def test_sdk_full_flow(live_server):
-    # Configure SDK with the live test server URL
     configuration = Configuration(host=live_server)
-    with ApiClient(configuration) as api_client:
+
+    # 0. Test that unauthenticated client is rejected
+    with ApiClient(configuration) as unauth_client:
+        unauth_api = WordsApi(unauth_client)
+        with pytest.raises(ForbiddenException):
+            unauth_api.get_due_words()
+
+    # Authenticate with X-API-Key header
+    with ApiClient(configuration, header_name="X-API-Key", header_value=settings.API_KEY) as api_client:
         words_api = WordsApi(api_client)
 
         # 1. Add a word

@@ -1,4 +1,37 @@
-env
-node_modules
+# Virtual Environment
+env/
+venv/
+ENV/
+.venv/
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.egg-info/
+dist/
+build/
+*.egg
+
+# Testing & Coverage
+.coverage
+htmlcov/
+.pytest_cache/
+
+# Databases
 *.db
-__pycache__
+*.sqlite3
+
+# Node & Frontend
+frontend/node_modules/
+frontend/dist/
+*.log
+
+# Environment Files (Keep .env.example tracked, ignore actual secrets)
+.env
+frontend/.env
+*.local
+
+# IDE
+.vscode/
+.idea/
